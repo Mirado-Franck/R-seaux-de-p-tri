@@ -1,0 +1,107 @@
+/* Place Node */
+.place-node {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid var(--color-place);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.place-node:hover {
+  border-color: var(--color-place-hover);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.place-node.selected {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+.place-node .place-label {
+  position: absolute;
+  bottom: -22px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.place-node .capacity-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #8b5cf6;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+}
+
+/* Tokens */
+.tokens-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  max-width: 44px;
+}
+
+.token {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-token);
+}
+
+.token-count {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-token);
+}
+
+/* Transition Node */
+.transition-node {
+  width: 24px;
+  height: 56px;
+  background: var(--color-transition-disabled);
+  border: 2px solid #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.transition-node.enabled {
+  background: var(--color-transition-enabled);
+  border-color: #d97706;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+  animation: pulse-enabled 1.5s ease-in-out infinite;
+}
+
+.transition-node.enabled:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+}
+
+.transition-node .transition-label {
+  position: absolute;
+  bottom: -22px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+@keyframes pulse-enabled {
+  0%, 100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.7); }
+}
