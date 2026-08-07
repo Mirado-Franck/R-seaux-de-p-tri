@@ -1,24 +1,23 @@
 import { memo } from 'react';
-import { getBezierPath, EdgeLabelRenderer, BaseEdge } from 'reactflow';
+import { useStore, getBezierPath, EdgeLabelRenderer, BaseEdge } from 'reactflow';
+import { getFloatingEdgeParams } from '../../utils/edgeGeometry';
 
-const InhibitorArcEdge = ({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  data,
-  style,
-}) => {
+const InhibitorArcEdge = ({ id, source, target, style }) => {
+  const sourceNode = useStore((s) => s.nodeInternals.get(source));
+  const targetNode = useStore((s) => s.nodeInternals.get(target));
+
+  if (!sourceNode || !targetNode) return null;
+
+  const { sx, sy, tx, ty, sourcePos, targetPos } = getFloatingEdgeParams(sourceNode, targetNode);
+
   const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
+    sourceX: sx,
+    sourceY: sy,
+    targetX: tx,
+    targetY: ty,
+    sourcePosition: sourcePos,
+    targetPosition: targetPos,
+    curvature: 0.25,
   });
 
   return (
@@ -28,15 +27,15 @@ const InhibitorArcEdge = ({
         path={edgePath}
         style={{
           ...style,
-          strokeWidth: 2,
+          strokeWidth: 1.5,
           stroke: '#ef4444',
           strokeDasharray: '6,4',
         }}
       />
-      {/* Cercle au bout (arc inhibiteur) */}
+      {/* Cercle vide au bout de l'arc inhibiteur */}
       <circle
-        cx={targetX}
-        cy={targetY}
+        cx={tx}
+        cy={ty}
         r={6}
         fill="white"
         stroke="#ef4444"

@@ -1,25 +1,24 @@
 import { memo } from 'react';
-import { getBezierPath, EdgeLabelRenderer, BaseEdge } from 'reactflow';
+import { useStore, getBezierPath, EdgeLabelRenderer, BaseEdge } from 'reactflow';
+import { getFloatingEdgeParams } from '../../utils/edgeGeometry';
 
-const ArcEdge = ({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  data,
-  markerEnd,
-  style,
-}) => {
+const ArcEdge = ({ id, source, target, data, markerEnd, style }) => {
+  // Récupérer les nœuds source et cible depuis le store React Flow
+  const sourceNode = useStore((s) => s.nodeInternals.get(source));
+  const targetNode = useStore((s) => s.nodeInternals.get(target));
+
+  if (!sourceNode || !targetNode) return null;
+
+  const { sx, sy, tx, ty, sourcePos, targetPos } = getFloatingEdgeParams(sourceNode, targetNode);
+
   const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
+    sourceX: sx,
+    sourceY: sy,
+    targetX: tx,
+    targetY: ty,
+    sourcePosition: sourcePos,
+    targetPosition: targetPos,
+    curvature: 0.25,
   });
 
   const weight = data?.weight || 1;
@@ -30,7 +29,7 @@ const ArcEdge = ({
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
-        style={{ ...style, strokeWidth: 2, stroke: '#374151' }}
+        style={{ ...style, strokeWidth: 1.5, stroke: '#1f2937' }}
       />
       {weight > 1 && (
         <EdgeLabelRenderer>

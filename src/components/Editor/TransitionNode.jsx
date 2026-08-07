@@ -4,6 +4,14 @@ import usePetriStore from '../../stores/usePetriStore';
 import useSimulationStore from '../../stores/useSimulationStore';
 import '../../styles/nodes.css';
 
+const handleStyle = {
+  background: 'transparent',
+  border: 'none',
+  width: 8,
+  height: 8,
+  opacity: 0,
+};
+
 const TransitionNode = ({ id, data, selected }) => {
   const fireTransition = usePetriStore((s) => s.fireTransition);
   const getMarkingObject = usePetriStore((s) => s.getMarkingObject);
@@ -14,7 +22,6 @@ const TransitionNode = ({ id, data, selected }) => {
     if (data.enabled) {
       const success = fireTransition(id);
       if (success) {
-        // Petit délai pour avoir le marquage mis à jour
         setTimeout(() => {
           recordFiring(data.label, getMarkingObject());
         }, 10);
@@ -28,10 +35,17 @@ const TransitionNode = ({ id, data, selected }) => {
       onDoubleClick={handleDoubleClick}
       title={data.enabled ? 'Double-cliquez pour tirer cette transition' : 'Transition non franchissable'}
     >
-      <Handle type="target" position={Position.Left} style={{ background: '#10b981' }} />
-      <Handle type="source" position={Position.Right} style={{ background: '#10b981' }} />
-      <Handle type="target" position={Position.Top} id="top" style={{ background: '#10b981' }} />
-      <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#10b981' }} />
+      <Handle type="target" position={Position.Top} id="t" style={handleStyle} />
+      <Handle type="source" position={Position.Top} id="s-t" style={handleStyle} />
+      
+      <Handle type="target" position={Position.Bottom} id="b" style={handleStyle} />
+      <Handle type="source" position={Position.Bottom} id="s-b" style={handleStyle} />
+      
+      <Handle type="target" position={Position.Left} id="l" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="s-l" style={handleStyle} />
+      
+      <Handle type="target" position={Position.Right} id="r" style={handleStyle} />
+      <Handle type="source" position={Position.Right} id="s-r" style={handleStyle} />
 
       <span className="transition-label">{data.label}</span>
     </div>

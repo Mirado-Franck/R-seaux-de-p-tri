@@ -131,6 +131,7 @@ const PetriNetEditor = () => {
           onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          connectionMode="loose"   
           fitView
           snapToGrid
           snapGrid={[15, 15]}

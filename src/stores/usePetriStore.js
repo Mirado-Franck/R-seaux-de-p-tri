@@ -51,24 +51,21 @@ const usePetriStore = create((set, get) => ({
     const source = nodes.find((n) => n.id === connection.source);
     const target = nodes.find((n) => n.id === connection.target);
 
-    // Validation bipartite: place->transition ou transition->place
     if (!source || !target) return;
-    if (source.type === target.type) {
-      return; // Même type interdit
-    }
+    if (source.type === target.type) return;
 
-    // Vérifier doublon
     const exists = edges.some(
       (e) => e.source === connection.source && e.target === connection.target
     );
     if (exists) return;
 
     const newEdge = {
-      ...connection,
       id: `e-${nanoid(8)}`,
+      source: connection.source,
+      target: connection.target,
       type: 'arc',
       data: { weight: 1, type: EDGE_TYPES.ARC },
-      markerEnd: { type: 'arrowclosed', color: '#374151' },
+      markerEnd: { type: 'arrowclosed', color: '#1f2937', width: 18, height: 18 },
     };
 
     set({ edges: addEdge(newEdge, edges) });
@@ -123,7 +120,6 @@ const usePetriStore = create((set, get) => ({
     );
     if (exists) return false;
 
-    // Arcs inhibiteurs uniquement depuis une place vers une transition
     if (type === EDGE_TYPES.INHIBITOR) {
       if (source.type !== NODE_TYPES.PLACE || target.type !== NODE_TYPES.TRANSITION) {
         return false;
@@ -137,11 +133,8 @@ const usePetriStore = create((set, get) => ({
       type: type === EDGE_TYPES.INHIBITOR ? 'inhibitor' : 'arc',
       data: { weight: 1, type },
       markerEnd: type === EDGE_TYPES.INHIBITOR
-        ? { type: 'arrow', color: '#ef4444' }
-        : { type: 'arrowclosed', color: '#374151' },
-      style: type === EDGE_TYPES.INHIBITOR
-        ? { stroke: '#ef4444', strokeDasharray: '5,5' }
-        : {},
+        ? undefined
+        : { type: 'arrowclosed', color: '#1f2937', width: 18, height: 18 },
     };
 
     set({ edges: [...edges, newEdge] });
@@ -350,20 +343,26 @@ const usePetriStore = create((set, get) => ({
     const { nodes, edges } = get();
     return JSON.stringify({ nodes, edges }, null, 2);
   },
-
-  importNet: (json) => {
-    try {
-      const data = typeof json === 'string' ? JSON.parse(json) : json;
-      if (data.nodes && data.edges) {
-        set({ nodes: data.nodes, edges: data.edges, selectedElement: null });
-        setTimeout(() => get().updateAllTransitionsEnabled(), 0);
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
+importNet: (json) => {
+  try {
+    const data = typeof json === 'string' ? JSON.parse(json) : json;
+    if (data.nodes && data.edges) {
+      // Convertir null → Infinity pour les capacités
+      const cleanedNodes = data.nodes.map((n) => {
+        if (n.type === 'place' && (n.data.capacity === null || n.data.capacity === undefined)) {
+          return { ...n, data: { ...n.data, capacity: Infinity } };
+        }
+        return n;
+      });
+      set({ nodes: cleanedNodes, edges: data.edges, selectedElement: null });
+      setTimeout(() => get().updateAllTransitionsEnabled(), 0);
+      return true;
     }
-  },
+    return false;
+  } catch {
+    return false;
+  }
+},
 }));
 
 export default usePetriStore;

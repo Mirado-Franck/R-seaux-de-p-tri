@@ -16,6 +16,8 @@ import usePetriStore from '../../stores/usePetriStore';
 import useSimulationStore from '../../stores/useSimulationStore';
 import { TOOL_MODES } from '../../constants/defaults';
 import '../../styles/editor.css';
+import { useMemo } from 'react';
+import { validatePetriNet } from '../../utils/petriNetValidator';
 
 const tools = [
   { mode: TOOL_MODES.SELECT, icon: MousePointer2, label: 'Sélection', shortcut: 'V' },
@@ -79,6 +81,10 @@ const EditorToolbar = () => {
     saveInitialMarking(getMarkingObject());
   }, [updateAllTransitionsEnabled, saveInitialMarking, getMarkingObject]);
 
+    const nodes = usePetriStore((s) => s.nodes);
+const edges = usePetriStore((s) => s.edges);
+
+const validation = useMemo(() => validatePetriNet(nodes, edges), [nodes, edges]);
   return (
     <div className="toolbar">
       <div className="toolbar-group">
@@ -120,6 +126,28 @@ const EditorToolbar = () => {
           <Upload size={16} />
         </button>
       </div>
+      <div className="toolbar-group" style={{ marginLeft: 'auto', borderRight: 'none' }}>
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      padding: '4px 10px',
+      borderRadius: '6px',
+      background: validation.isValid ? '#dcfce7' : '#fee2e2',
+      color: validation.isValid ? '#166534' : '#991b1b',
+      fontSize: '12px',
+      fontWeight: 600,
+    }}
+    title={validation.isValid ? 'Réseau valide' : `${validation.errors.length} erreur(s)`}
+  >
+    <span>{validation.isValid ? '✓' : '✗'}</span>
+    <span>{validation.isValid ? 'Valide' : `${validation.errors.length} erreur(s)`}</span>
+    {validation.warnings.length > 0 && (
+      <span style={{ color: '#d97706' }}>⚠ {validation.warnings.length}</span>
+    )}
+  </div>
+</div>
     </div>
   );
 };

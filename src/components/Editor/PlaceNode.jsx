@@ -16,13 +16,30 @@ const renderTokens = (count) => {
   return <span className="token-count">{count}</span>;
 };
 
+// Style commun pour tous les handles : invisibles mais fonctionnels
+const handleStyle = {
+  background: 'transparent',
+  border: 'none',
+  width: 8,
+  height: 8,
+  opacity: 0,
+};
+
 const PlaceNode = ({ data, selected }) => {
   return (
     <div className={`place-node ${selected ? 'selected' : ''}`}>
-      <Handle type="target" position={Position.Left} style={{ background: '#3b82f6' }} />
-      <Handle type="source" position={Position.Right} style={{ background: '#3b82f6' }} />
-      <Handle type="target" position={Position.Top} id="top" style={{ background: '#3b82f6' }} />
-      <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#3b82f6' }} />
+      {/* Handles invisibles sur les 4 côtés */}
+      <Handle type="target" position={Position.Top} id="t" style={handleStyle} />
+      <Handle type="source" position={Position.Top} id="s-t" style={handleStyle} />
+      
+      <Handle type="target" position={Position.Bottom} id="b" style={handleStyle} />
+      <Handle type="source" position={Position.Bottom} id="s-b" style={handleStyle} />
+      
+      <Handle type="target" position={Position.Left} id="l" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="s-l" style={handleStyle} />
+      
+      <Handle type="target" position={Position.Right} id="r" style={handleStyle} />
+      <Handle type="source" position={Position.Right} id="s-r" style={handleStyle} />
 
       {renderTokens(data.tokens)}
 

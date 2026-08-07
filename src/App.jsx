@@ -5,6 +5,7 @@ import PropertiesPanel from './components/Editor/PropertiesPanel';
 import SimulationControls from './components/Simulation/SimulationControls';
 import AnalysisPanel from './components/Analysis/AnalysisPanel';
 import PropertyChecker from './components/Properties/PropertyChecker';
+import NetValidator from './components/Properties/NetValidator';  // ← AJOUT
 import TransformationPanel from './components/Transformation/TransformationPanel';
 import useUIStore from './stores/useUIStore';
 import {
@@ -13,12 +14,14 @@ import {
   BarChart3,
   ShieldCheck,
   Shuffle,
+  CheckSquare,               // ← AJOUT
   PanelRightClose,
   PanelRightOpen,
 } from 'lucide-react';
 
 const TABS = [
   { id: 'properties', label: 'Propriétés', icon: Settings },
+  { id: 'validator', label: 'Validation', icon: CheckSquare },   // ← AJOUT
   { id: 'simulation', label: 'Simulation', icon: Play },
   { id: 'analysis', label: 'Analyse', icon: BarChart3 },
   { id: 'verification', label: 'Vérification', icon: ShieldCheck },
@@ -33,12 +36,10 @@ function App() {
   return (
     <ReactFlowProvider>
       <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
-        {/* Zone éditeur */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <PetriNetEditor />
         </div>
 
-        {/* Bouton toggle panel */}
         <button
           onClick={toggleRightPanel}
           style={{
@@ -59,14 +60,13 @@ function App() {
           {rightPanelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
         </button>
 
-        {/* Panneau latéral droit */}
         {rightPanelOpen && (
           <div className="side-panel">
-            {/* Tabs */}
             <div style={{
               display: 'flex',
               borderBottom: '1px solid #e2e8f0',
               background: '#f8fafc',
+              overflowX: 'auto',
             }}>
               {TABS.map(({ id, label, icon: Icon }) => (
                 <button
@@ -75,6 +75,7 @@ function App() {
                   title={label}
                   style={{
                     flex: 1,
+                    minWidth: '60px',
                     padding: '10px 4px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -96,9 +97,9 @@ function App() {
               ))}
             </div>
 
-            {/* Contenu du tab */}
             <div style={{ flex: 1, overflow: 'auto' }}>
               {activeTab === 'properties' && <PropertiesPanel />}
+              {activeTab === 'validator' && <NetValidator />}    {/* ← AJOUT */}
               {activeTab === 'simulation' && <SimulationControls />}
               {activeTab === 'analysis' && <AnalysisPanel />}
               {activeTab === 'verification' && <PropertyChecker />}
