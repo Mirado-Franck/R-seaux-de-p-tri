@@ -3,8 +3,6 @@ import useSimulationStore from '../../stores/useSimulationStore';
 import { useCallback } from 'react';
 
 const SimulationControls = () => {
-  const nodes = usePetriStore((s) => s.nodes);
-  const updateAllTransitionsEnabled = usePetriStore((s) => s.updateAllTransitionsEnabled);
   const setMarking = usePetriStore((s) => s.setMarking);
   const getMarkingObject = usePetriStore((s) => s.getMarkingObject);
   const saveInitialMarking = useSimulationStore((s) => s.saveInitialMarking);
@@ -15,9 +13,8 @@ const SimulationControls = () => {
   const resetSimulation = useSimulationStore((s) => s.resetSimulation);
 
   const handleInit = useCallback(() => {
-    updateAllTransitionsEnabled();
     saveInitialMarking(getMarkingObject());
-  }, [updateAllTransitionsEnabled, saveInitialMarking, getMarkingObject]);
+  }, [saveInitialMarking, getMarkingObject]);
 
   const handleUndo = useCallback(() => {
     const prevMarking = undo();

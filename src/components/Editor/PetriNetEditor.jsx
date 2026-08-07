@@ -15,6 +15,7 @@ import EditorToolbar from './EditorToolbar';
 
 import usePetriStore from '../../stores/usePetriStore';
 import useUIStore from '../../stores/useUIStore';
+import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts';
 import { TOOL_MODES, NODE_TYPES, EDGE_TYPES } from '../../constants/defaults';
 
 const PetriNetEditor = () => {
@@ -31,22 +32,28 @@ const PetriNetEditor = () => {
   const addTransition = usePetriStore((s) => s.addTransition);
   const addArc = usePetriStore((s) => s.addArc);
   const setTokens = usePetriStore((s) => s.setTokens);
-  const updateAllTransitionsEnabled = usePetriStore((s) => s.updateAllTransitionsEnabled);
   const arcSource = usePetriStore((s) => s.arcSource);
   const setArcSource = usePetriStore((s) => s.setArcSource);
-  const deleteSelected = usePetriStore((s) => s.deleteSelected);
 
   const showMinimap = useUIStore((s) => s.showMinimap);
 
-  const nodeTypes = useMemo(() => ({
-    [NODE_TYPES.PLACE]: PlaceNode,
-    [NODE_TYPES.TRANSITION]: TransitionNode,
-  }), []);
+  useKeyboardShortcuts();
 
-  const edgeTypes = useMemo(() => ({
-    arc: ArcEdge,
-    inhibitor: InhibitorArcEdge,
-  }), []);
+  const nodeTypes = useMemo(
+    () => ({
+      [NODE_TYPES.PLACE]: PlaceNode,
+      [NODE_TYPES.TRANSITION]: TransitionNode,
+    }),
+    []
+  );
+
+  const edgeTypes = useMemo(
+    () => ({
+      arc: ArcEdge,
+      inhibitor: InhibitorArcEdge,
+    }),
+    []
+  );
 
   const onInit = useCallback((instance) => {
     reactFlowInstance.current = instance;
@@ -60,64 +67,61 @@ const PetriNetEditor = () => {
     });
   }, []);
 
-  const onPaneClick = useCallback((event) => {
-    const position = screenToFlowPosition(event);
+  const onPaneClick = useCallback(
+    (event) => {
+      const position = screenToFlowPosition(event);
 
-    switch (toolMode) {
-      case TOOL_MODES.ADD_PLACE:
-        addPlace(position);
-        setTimeout(() => updateAllTransitionsEnabled(), 0);
-        break;
-      case TOOL_MODES.ADD_TRANSITION:
-        addTransition(position);
-        setTimeout(() => updateAllTransitionsEnabled(), 0);
-        break;
-      default:
-        setArcSource(null);
-        break;
-    }
-  }, [toolMode, screenToFlowPosition, addPlace, addTransition, setArcSource, updateAllTransitionsEnabled]);
-
-  const onNodeClick = useCallback((_event, node) => {
-    switch (toolMode) {
-      case TOOL_MODES.ADD_TOKEN:
-        if (node.type === NODE_TYPES.PLACE) {
-          setTokens(node.id, node.data.tokens + 1);
-          setTimeout(() => updateAllTransitionsEnabled(), 0);
-        }
-        break;
-      case TOOL_MODES.REMOVE_TOKEN:
-        if (node.type === NODE_TYPES.PLACE) {
-          setTokens(node.id, node.data.tokens - 1);
-          setTimeout(() => updateAllTransitionsEnabled(), 0);
-        }
-        break;
-      case TOOL_MODES.ADD_ARC:
-      case TOOL_MODES.ADD_INHIBITOR:
-        if (arcSource === null) {
-          setArcSource(node.id);
-        } else if (arcSource !== node.id) {
-          const type = toolMode === TOOL_MODES.ADD_INHIBITOR ? EDGE_TYPES.INHIBITOR : EDGE_TYPES.ARC;
-          addArc(arcSource, node.id, type);
+      switch (toolMode) {
+        case TOOL_MODES.ADD_PLACE:
+          addPlace(position);
+          break;
+        case TOOL_MODES.ADD_TRANSITION:
+          addTransition(position);
+          break;
+        default:
           setArcSource(null);
-          setTimeout(() => updateAllTransitionsEnabled(), 0);
-        } else {
-          setArcSource(null);
-        }
-        break;
-      default:
-        break;
-    }
-  }, [toolMode, arcSource, setArcSource, addArc, setTokens, updateAllTransitionsEnabled]);
+          break;
+      }
+    },
+    [toolMode, screenToFlowPosition, addPlace, addTransition, setArcSource]
+  );
 
-  const onKeyDown = useCallback((event) => {
-    if (event.key === 'Delete' || event.key === 'Backspace') {
-      deleteSelected();
-    }
-  }, [deleteSelected]);
+  const onNodeClick = useCallback(
+    (_event, node) => {
+      switch (toolMode) {
+        case TOOL_MODES.ADD_TOKEN:
+          if (node.type === NODE_TYPES.PLACE) {
+            setTokens(node.id, node.data.tokens + 1);
+          }
+          break;
+        case TOOL_MODES.REMOVE_TOKEN:
+          if (node.type === NODE_TYPES.PLACE) {
+            setTokens(node.id, node.data.tokens - 1);
+          }
+          break;
+        case TOOL_MODES.ADD_ARC:
+        case TOOL_MODES.ADD_INHIBITOR: {
+          if (arcSource === null) {
+            setArcSource(node.id);
+          } else if (arcSource === node.id) {
+            setArcSource(null);
+          } else {
+            const type =
+              toolMode === TOOL_MODES.ADD_INHIBITOR ? EDGE_TYPES.INHIBITOR : EDGE_TYPES.ARC;
+            addArc(arcSource, node.id, type);
+            // addArc réinitialise déjà arcSource en cas de succès
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    [toolMode, arcSource, setArcSource, addArc, setTokens]
+  );
 
   return (
-    <div className="editor-container" onKeyDown={onKeyDown} tabIndex={0}>
+    <div className="editor-container" tabIndex={0}>
       <EditorToolbar />
       <div ref={reactFlowWrapper} style={{ flex: 1 }}>
         <ReactFlow
@@ -131,7 +135,7 @@ const PetriNetEditor = () => {
           onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          connectionMode="loose"   
+          connectionMode="loose"
           fitView
           snapToGrid
           snapGrid={[15, 15]}
@@ -157,11 +161,13 @@ const PetriNetEditor = () => {
       </div>
 
       {/* Indicateur du mode arc */}
-      {(toolMode === TOOL_MODES.ADD_ARC || toolMode === TOOL_MODES.ADD_INHIBITOR) && arcSource && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm z-50">
-          Source sélectionnée — Cliquez sur la cible pour créer l'arc
-        </div>
-      )}
+      {(toolMode === TOOL_MODES.ADD_ARC ||
+        toolMode === TOOL_MODES.ADD_INHIBITOR) &&
+        arcSource && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm z-50">
+            Source sélectionnée — Cliquez sur la cible pour créer l'arc
+          </div>
+        )}
     </div>
   );
 };

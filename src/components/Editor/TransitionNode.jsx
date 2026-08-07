@@ -17,17 +17,19 @@ const TransitionNode = ({ id, data, selected }) => {
   const getMarkingObject = usePetriStore((s) => s.getMarkingObject);
   const recordFiring = useSimulationStore((s) => s.recordFiring);
 
-  const handleDoubleClick = useCallback((e) => {
-    e.stopPropagation();
-    if (data.enabled) {
+  const handleDoubleClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+      if (!data.enabled) return;
       const success = fireTransition(id);
       if (success) {
-        setTimeout(() => {
-          recordFiring(data.label, getMarkingObject());
-        }, 10);
+        // fireTransition met le store à jour de façon synchrone :
+        // getMarkingObject() reflète déjà le nouveau marquage.
+        recordFiring(data.label, getMarkingObject());
       }
-    }
-  }, [id, data.enabled, data.label, fireTransition, getMarkingObject, recordFiring]);
+    },
+    [id, data.enabled, data.label, fireTransition, getMarkingObject, recordFiring]
+  );
 
   return (
     <div

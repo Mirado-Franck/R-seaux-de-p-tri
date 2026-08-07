@@ -7,24 +7,101 @@ import {
 } from 'reactflow';
 import { TOOL_MODES, NODE_TYPES, EDGE_TYPES } from '../constants/defaults';
 
-// Helper pour générer les noms
+// ===== Helpers hors store (purs, synchrones) =====
+
+const getPlaceNames = (nodes) =>
+  nodes
+    .filter((n) => n.type === NODE_TYPES.PLACE)
+    .map((n) => n.data.label);
+
+const getTransitionNames = (nodes) =>
+  nodes
+    .filter((n) => n.type === NODE_TYPES.TRANSITION)
+    .map((n) => n.data.label);
+
+/**
+ * Génère un nom unique du type P1/P2... ou T1/T2... en évitant les doublons,
+ * même quand l'utilisateur a renommé des nœuds manuellement.
+ */
 const getNextName = (nodes, type) => {
   const prefix = type === NODE_TYPES.PLACE ? 'P' : 'T';
-  const existing = nodes
-    .filter((n) => n.type === type)
-    .map((n) => {
-      const match = n.data.label.match(new RegExp(`^${prefix}(\\d+)$`));
-      return match ? parseInt(match[1]) : 0;
-    });
-  const max = existing.length > 0 ? Math.max(...existing) : 0;
-  return `${prefix}${max + 1}`;
+  const used = new Set(
+    type === NODE_TYPES.PLACE ? getPlaceNames(nodes) : getTransitionNames(nodes)
+  );
+  // On récupère aussi les numéros déjà présents pour continuer la numérotation
+  const numbers = [];
+  used.forEach((name) => {
+    const m = name.match(new RegExp(`^${prefix}(\\d+)$`));
+    if (m) numbers.push(parseInt(m[1], 10));
+  });
+  let i = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+  while (used.has(`${prefix}${i}`)) i++;
+  return `${prefix}${i}`;
+};
+
+/**
+ * Renvoie un libellé unique si celui proposé est déjà pris.
+ * Ignoré quand le nœud édité est lui-même celui qui porte déjà le nom.
+ */
+const uniqueLabel = (nodes, type, wanted, exceptId = null) => {
+  const used = new Set(
+    nodes
+      .filter((n) => n.type === type && n.id !== exceptId)
+      .map((n) => n.data.label)
+  );
+  if (!used.has(wanted)) return wanted;
+  // Essaie wanted (2), wanted (3)...
+  let i = 2;
+  while (used.has(`${wanted} (${i})`)) i++;
+  return `${wanted} (${i})`;
+};
+
+/**
+ * Applique le clamp [0, capacité] d'un coup, sans setTimeout.
+ */
+const clampTokens = (tokens, capacity) => {
+  const t = Math.max(0, Math.floor(tokens) || 0);
+  return capacity !== Infinity ? Math.min(t, capacity) : t;
+};
+
+/**
+ * Recalcule l'état "franchissable" de toutes les transitions.
+ * Fonction pure — retourne un nouveau tableau de nœuds.
+ */
+const recomputeEnabled = (nodes, edges) => {
+  const incomingByTransition = new Map();
+  edges.forEach((e) => {
+    if (!incomingByTransition.has(e.target)) incomingByTransition.set(e.target, []);
+    incomingByTransition.get(e.target).push(e);
+  });
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+
+  let changed = false;
+  const next = nodes.map((n) => {
+    if (n.type !== NODE_TYPES.TRANSITION) return n;
+    const incoming = incomingByTransition.get(n.id) || [];
+    let enabled = true;
+    for (const edge of incoming) {
+      const place = nodeById.get(edge.source);
+      if (!place) continue;
+      if (edge.data?.type === EDGE_TYPES.INHIBITOR) {
+        if (place.data.tokens !== 0) { enabled = false; break; }
+      } else {
+        if (place.data.tokens < (edge.data?.weight || 1)) { enabled = false; break; }
+      }
+    }
+    if (n.data.enabled === enabled) return n;
+    changed = true;
+    return { ...n, data: { ...n.data, enabled } };
+  });
+  return changed ? next : nodes;
 };
 
 const usePetriStore = create((set, get) => ({
   // ===== NODES & EDGES (React Flow) =====
   nodes: [],
   edges: [],
-  
+
   // ===== TOOL MODE =====
   toolMode: TOOL_MODES.SELECT,
   setToolMode: (mode) => set({ toolMode: mode }),
@@ -39,11 +116,17 @@ const usePetriStore = create((set, get) => ({
 
   // ===== REACT FLOW CALLBACKS =====
   onNodesChange: (changes) => {
-    set({ nodes: applyNodeChanges(changes, get().nodes) });
+    set((state) => {
+      const nodes = applyNodeChanges(changes, state.nodes);
+      return { nodes: recomputeEnabled(nodes, state.edges) };
+    });
   },
 
   onEdgesChange: (changes) => {
-    set({ edges: applyEdgeChanges(changes, get().edges) });
+    set((state) => {
+      const edges = applyEdgeChanges(changes, state.edges);
+      return { edges, nodes: recomputeEnabled(state.nodes, edges) };
+    });
   },
 
   onConnect: (connection) => {
@@ -68,7 +151,12 @@ const usePetriStore = create((set, get) => ({
       markerEnd: { type: 'arrowclosed', color: '#1f2937', width: 18, height: 18 },
     };
 
-    set({ edges: addEdge(newEdge, edges) });
+    const nextEdges = addEdge(newEdge, edges);
+    set({
+      edges: nextEdges,
+      nodes: recomputeEnabled(nodes, nextEdges),
+      arcSource: null,
+    });
   },
 
   // ===== ADD PLACE =====
@@ -79,30 +167,25 @@ const usePetriStore = create((set, get) => ({
       id: `place-${nanoid(8)}`,
       type: NODE_TYPES.PLACE,
       position,
-      data: {
-        label,
-        tokens: 0,
-        capacity: Infinity,
-      },
+      data: { label, tokens: 0, capacity: Infinity },
     };
-    set({ nodes: [...nodes, newNode] });
+    const nextNodes = [...nodes, newNode];
+    set({ nodes: nextNodes });
     return newNode;
   },
 
   // ===== ADD TRANSITION =====
   addTransition: (position) => {
-    const { nodes } = get();
+    const { nodes, edges } = get();
     const label = getNextName(nodes, NODE_TYPES.TRANSITION);
     const newNode = {
       id: `trans-${nanoid(8)}`,
       type: NODE_TYPES.TRANSITION,
       position,
-      data: {
-        label,
-        enabled: false,
-      },
+      data: { label, enabled: false },
     };
-    set({ nodes: [...nodes, newNode] });
+    const nextNodes = [...nodes, newNode];
+    set({ nodes: recomputeEnabled(nextNodes, edges) });
     return newNode;
   },
 
@@ -132,30 +215,64 @@ const usePetriStore = create((set, get) => ({
       target: targetId,
       type: type === EDGE_TYPES.INHIBITOR ? 'inhibitor' : 'arc',
       data: { weight: 1, type },
-      markerEnd: type === EDGE_TYPES.INHIBITOR
-        ? undefined
-        : { type: 'arrowclosed', color: '#1f2937', width: 18, height: 18 },
+      markerEnd:
+        type === EDGE_TYPES.INHIBITOR
+          ? undefined
+          : { type: 'arrowclosed', color: '#1f2937', width: 18, height: 18 },
     };
 
-    set({ edges: [...edges, newEdge] });
+    const nextEdges = [...edges, newEdge];
+    set({
+      edges: nextEdges,
+      nodes: recomputeEnabled(nodes, nextEdges),
+      arcSource: null,
+    });
     return true;
   },
 
   // ===== UPDATE NODE DATA =====
   updateNodeData: (nodeId, newData) => {
-    set({
-      nodes: get().nodes.map((n) =>
-        n.id === nodeId ? { ...n, data: { ...n.data, ...newData } } : n
-      ),
+    set((state) => {
+      const nodes = state.nodes.map((n) => {
+        if (n.id !== nodeId) return n;
+        const data = { ...n.data, ...newData };
+
+        // Garantit l'unicité du nom quand on renomme un nœud
+        if (newData.label !== undefined && typeof newData.label === 'string') {
+          data.label = uniqueLabel(state.nodes, n.type, newData.label, nodeId);
+        }
+
+        // Clamp des jetons pour les places
+        if (n.type === NODE_TYPES.PLACE) {
+          if (data.tokens !== undefined) {
+            data.tokens = clampTokens(data.tokens, data.capacity ?? Infinity);
+          }
+          if (
+            newData.capacity !== undefined &&
+            data.capacity !== Infinity &&
+            data.tokens > data.capacity
+          ) {
+            data.tokens = data.capacity;
+          }
+        }
+        return { ...n, data };
+      });
+      return { nodes: recomputeEnabled(nodes, state.edges) };
     });
   },
 
   // ===== UPDATE EDGE DATA =====
   updateEdgeData: (edgeId, newData) => {
-    set({
-      edges: get().edges.map((e) =>
-        e.id === edgeId ? { ...e, data: { ...e.data, ...newData } } : e
-      ),
+    set((state) => {
+      const edges = state.edges.map((e) => {
+        if (e.id !== edgeId) return e;
+        const data = { ...e.data, ...newData };
+        if (data.weight !== undefined) {
+          data.weight = Math.max(1, Math.floor(data.weight) || 1);
+        }
+        return { ...e, data };
+      });
+      return { edges, nodes: recomputeEnabled(state.nodes, edges) };
     });
   },
 
@@ -163,29 +280,23 @@ const usePetriStore = create((set, get) => ({
   setTokens: (placeId, count) => {
     const node = get().nodes.find((n) => n.id === placeId);
     if (!node || node.type !== NODE_TYPES.PLACE) return;
-    
-    const capacity = node.data.capacity;
-    const tokens = Math.max(0, capacity !== Infinity ? Math.min(count, capacity) : count);
-    
-    get().updateNodeData(placeId, { tokens });
+    get().updateNodeData(placeId, { tokens: clampTokens(count, node.data.capacity) });
   },
 
   // ===== DELETE SELECTED =====
   deleteSelected: () => {
-    const { nodes, edges } = get();
-    const selectedNodes = nodes.filter((n) => n.selected);
-    const selectedEdges = edges.filter((e) => e.selected);
-    const selectedNodeIds = new Set(selectedNodes.map((n) => n.id));
-
-    set({
-      nodes: nodes.filter((n) => !n.selected),
-      edges: edges.filter(
-        (e) =>
-          !e.selected &&
-          !selectedNodeIds.has(e.source) &&
-          !selectedNodeIds.has(e.target)
-      ),
-      selectedElement: null,
+    set((state) => {
+      const { nodes, edges } = state;
+      const selectedNodeIds = new Set(nodes.filter((n) => n.selected).map((n) => n.id));
+      const nextNodes = nodes.filter((n) => !n.selected);
+      const nextEdges = edges.filter(
+        (e) => !e.selected && !selectedNodeIds.has(e.source) && !selectedNodeIds.has(e.target)
+      );
+      return {
+        nodes: recomputeEnabled(nextNodes, nextEdges),
+        edges: nextEdges,
+        selectedElement: null,
+      };
     });
   },
 
@@ -196,6 +307,7 @@ const usePetriStore = create((set, get) => ({
       edges: [],
       selectedElement: null,
       arcSource: null,
+      toolMode: TOOL_MODES.SELECT,
     });
   },
 
@@ -208,10 +320,7 @@ const usePetriStore = create((set, get) => ({
     const { edges, nodes } = get();
     return edges
       .filter((e) => e.target === transitionId)
-      .map((e) => ({
-        place: nodes.find((n) => n.id === e.source),
-        edge: e,
-      }))
+      .map((e) => ({ place: nodes.find((n) => n.id === e.source), edge: e }))
       .filter((x) => x.place);
   },
 
@@ -219,94 +328,76 @@ const usePetriStore = create((set, get) => ({
     const { edges, nodes } = get();
     return edges
       .filter((e) => e.source === transitionId)
-      .map((e) => ({
-        place: nodes.find((n) => n.id === e.target),
-        edge: e,
-      }))
+      .map((e) => ({ place: nodes.find((n) => n.id === e.target), edge: e }))
       .filter((x) => x.place);
   },
 
   // ===== IS TRANSITION ENABLED =====
   isTransitionEnabled: (transitionId) => {
-    const { getInputPlaces } = get();
-    const inputs = getInputPlaces(transitionId);
-
-    // Transition source (pas d'entrées) → toujours franchissable
-    if (inputs.length === 0) return true;
-
-    return inputs.every(({ place, edge }) => {
-      if (edge.data.type === EDGE_TYPES.INHIBITOR) {
-        // Arc inhibiteur: la place doit être vide (0 jetons)
-        return place.data.tokens === 0;
-      }
-      // Arc normal: assez de jetons
-      return place.data.tokens >= (edge.data.weight || 1);
+    const { nodes, edges } = get();
+    const t = nodes.find((n) => n.id === transitionId);
+    if (!t) return false;
+    if (t.data.enabled !== undefined) return t.data.enabled;
+    // Fallback calculé à la volée
+    const incoming = edges.filter((e) => e.target === transitionId);
+    if (incoming.length === 0) return true;
+    const nodeById = new Map(nodes.map((n) => [n.id, n]));
+    return incoming.every((edge) => {
+      const place = nodeById.get(edge.source);
+      if (!place) return true;
+      if (edge.data?.type === EDGE_TYPES.INHIBITOR) return place.data.tokens === 0;
+      return place.data.tokens >= (edge.data?.weight || 1);
     });
   },
 
-  // ===== UPDATE ENABLED STATUS =====
+  // ===== UPDATE ENABLED STATUS (sync, conservée pour compatibilité) =====
   updateAllTransitionsEnabled: () => {
-    const { nodes, isTransitionEnabled } = get();
-    const updatedNodes = nodes.map((n) => {
-      if (n.type === NODE_TYPES.TRANSITION) {
-        return {
-          ...n,
-          data: { ...n.data, enabled: isTransitionEnabled(n.id) },
-        };
-      }
-      return n;
-    });
-    set({ nodes: updatedNodes });
+    set((state) => ({ nodes: recomputeEnabled(state.nodes, state.edges) }));
   },
 
   // ===== FIRE TRANSITION =====
   fireTransition: (transitionId) => {
     const state = get();
-    if (!state.isTransitionEnabled(transitionId)) return false;
+    const { nodes, edges } = state;
 
-    const inputs = state.getInputPlaces(transitionId);
-    const outputs = state.getOutputPlaces(transitionId);
+    // Calcul synchrone de la franchissabilité
+    const incoming = edges.filter((e) => e.target === transitionId);
+    const outgoing = edges.filter((e) => e.source === transitionId);
+    const nodeById = new Map(nodes.map((n) => [n.id, n]));
 
-    let newNodes = [...state.nodes];
+    const enabled =
+      incoming.length === 0 ||
+      incoming.every((edge) => {
+        const place = nodeById.get(edge.source);
+        if (!place) return true;
+        if (edge.data?.type === EDGE_TYPES.INHIBITOR) return place.data.tokens === 0;
+        return place.data.tokens >= (edge.data?.weight || 1);
+      });
 
-    // Consommer les jetons des places d'entrée (sauf arcs inhibiteurs)
-    inputs.forEach(({ place, edge }) => {
-      if (edge.data.type === EDGE_TYPES.INHIBITOR) return;
-      const weight = edge.data.weight || 1;
-      const idx = newNodes.findIndex((n) => n.id === place.id);
-      if (idx !== -1) {
-        newNodes[idx] = {
-          ...newNodes[idx],
-          data: {
-            ...newNodes[idx].data,
-            tokens: newNodes[idx].data.tokens - weight,
-          },
-        };
-      }
+    if (!enabled) return false;
+
+    let newNodes = nodes.map((n) => ({ ...n, data: { ...n.data } }));
+    const idxById = new Map(newNodes.map((n, i) => [n.id, i]));
+
+    incoming.forEach((edge) => {
+      if (edge.data?.type === EDGE_TYPES.INHIBITOR) return;
+      const idx = idxById.get(edge.source);
+      if (idx === undefined) return;
+      const weight = edge.data?.weight || 1;
+      newNodes[idx].data.tokens = Math.max(0, newNodes[idx].data.tokens - weight);
     });
 
-    // Produire les jetons dans les places de sortie
-    outputs.forEach(({ place, edge }) => {
-      const weight = edge.data.weight || 1;
-      const idx = newNodes.findIndex((n) => n.id === place.id);
-      if (idx !== -1) {
-        const currentTokens = newNodes[idx].data.tokens;
-        const capacity = newNodes[idx].data.capacity;
-        const newTokens = capacity !== Infinity
-          ? Math.min(currentTokens + weight, capacity)
-          : currentTokens + weight;
-        newNodes[idx] = {
-          ...newNodes[idx],
-          data: { ...newNodes[idx].data, tokens: newTokens },
-        };
-      }
+    outgoing.forEach((edge) => {
+      const idx = idxById.get(edge.target);
+      if (idx === undefined) return;
+      const place = newNodes[idx];
+      const weight = edge.data?.weight || 1;
+      const capacity = place.data.capacity;
+      const next = place.data.tokens + weight;
+      place.data.tokens = capacity !== Infinity ? Math.min(next, capacity) : next;
     });
 
-    set({ nodes: newNodes });
-    
-    // Mettre à jour les transitions franchissables
-    setTimeout(() => get().updateAllTransitionsEnabled(), 0);
-
+    set({ nodes: recomputeEnabled(newNodes, edges) });
     return true;
   },
 
@@ -317,25 +408,31 @@ const usePetriStore = create((set, get) => ({
   },
 
   getMarkingObject: () => {
-    const places = get().getPlaces();
     const marking = {};
-    places.forEach((p) => {
-      marking[p.id] = p.data.tokens;
-    });
+    get()
+      .getPlaces()
+      .forEach((p) => {
+        marking[p.id] = p.data.tokens;
+      });
     return marking;
   },
 
   // ===== SET MARKING =====
   setMarking: (marking) => {
-    const { nodes } = get();
-    const newNodes = nodes.map((n) => {
-      if (n.type === NODE_TYPES.PLACE && marking[n.id] !== undefined) {
-        return { ...n, data: { ...n.data, tokens: marking[n.id] } };
-      }
-      return n;
+    set((state) => {
+      const nodes = state.nodes.map((n) => {
+        if (n.type !== NODE_TYPES.PLACE) return n;
+        if (marking[n.id] === undefined) return n;
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            tokens: clampTokens(marking[n.id], n.data.capacity),
+          },
+        };
+      });
+      return { nodes: recomputeEnabled(nodes, state.edges) };
     });
-    set({ nodes: newNodes });
-    setTimeout(() => get().updateAllTransitionsEnabled(), 0);
   },
 
   // ===== EXPORT / IMPORT =====
@@ -343,26 +440,61 @@ const usePetriStore = create((set, get) => ({
     const { nodes, edges } = get();
     return JSON.stringify({ nodes, edges }, null, 2);
   },
-importNet: (json) => {
-  try {
-    const data = typeof json === 'string' ? JSON.parse(json) : json;
-    if (data.nodes && data.edges) {
-      // Convertir null → Infinity pour les capacités
-      const cleanedNodes = data.nodes.map((n) => {
-        if (n.type === 'place' && (n.data.capacity === null || n.data.capacity === undefined)) {
-          return { ...n, data: { ...n.data, capacity: Infinity } };
+
+  importNet: (json) => {
+    try {
+      const data = typeof json === 'string' ? JSON.parse(json) : json;
+      if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+        return false;
+      }
+
+      // Nettoyage / normalisation
+      let nodes = data.nodes.map((n) => {
+        if (n.type === NODE_TYPES.PLACE) {
+          const capacity =
+            n.data?.capacity === null ||
+            n.data?.capacity === undefined ||
+            n.data.capacity === 'Infinity'
+              ? Infinity
+              : n.data.capacity;
+          const tokens = clampTokens(n.data?.tokens ?? 0, capacity);
+          return { ...n, data: { ...n.data, capacity, tokens } };
+        }
+        if (n.type === NODE_TYPES.TRANSITION) {
+          return { ...n, data: { enabled: false, ...n.data } };
         }
         return n;
       });
-      set({ nodes: cleanedNodes, edges: data.edges, selectedElement: null });
-      setTimeout(() => get().updateAllTransitionsEnabled(), 0);
+
+      // Garantit l'unicité des libellés au cas où le fichier importé
+      // contiendrait des doublons (les calculs matriciels utilisent les labels).
+      nodes = nodes.map((n, idx) => {
+        const previous = nodes.slice(0, idx);
+        const unique = uniqueLabel(previous, n.type, n.data?.label ?? '', null);
+        if (unique === n.data?.label) return n;
+        return { ...n, data: { ...n.data, label: unique } };
+      });
+
+      const edges = data.edges.map((e) => ({
+        ...e,
+        data: {
+          type: e.data?.type === EDGE_TYPES.INHIBITOR ? EDGE_TYPES.INHIBITOR : EDGE_TYPES.ARC,
+          weight: Math.max(1, Math.floor(e.data?.weight) || 1),
+        },
+      }));
+
+      set({
+        nodes: recomputeEnabled(nodes, edges),
+        edges,
+        selectedElement: null,
+        arcSource: null,
+        toolMode: TOOL_MODES.SELECT,
+      });
       return true;
+    } catch {
+      return false;
     }
-    return false;
-  } catch {
-    return false;
-  }
-},
+  },
 }));
 
 export default usePetriStore;

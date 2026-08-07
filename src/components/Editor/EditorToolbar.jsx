@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import usePetriStore from '../../stores/usePetriStore';
 import useSimulationStore from '../../stores/useSimulationStore';
-import { TOOL_MODES } from '../../constants/defaults';
+import useUIStore from '../../stores/useUIStore';
+import { TOOL_MODES, PANEL_TABS } from '../../constants/defaults';
 import '../../styles/editor.css';
 import { useMemo } from 'react';
 import { validatePetriNet } from '../../utils/petriNetValidator';
@@ -36,8 +37,8 @@ const EditorToolbar = () => {
   const clearAll = usePetriStore((s) => s.clearAll);
   const exportNet = usePetriStore((s) => s.exportNet);
   const importNet = usePetriStore((s) => s.importNet);
-  const updateAllTransitionsEnabled = usePetriStore((s) => s.updateAllTransitionsEnabled);
   const getMarkingObject = usePetriStore((s) => s.getMarkingObject);
+  const setActiveTab = useUIStore((s) => s.setActiveTab);
   const saveInitialMarking = useSimulationStore((s) => s.saveInitialMarking);
   const resetSimulation = useSimulationStore((s) => s.resetSimulation);
 
@@ -77,9 +78,9 @@ const EditorToolbar = () => {
   }, [clearAll, resetSimulation]);
 
   const handleStartSim = useCallback(() => {
-    updateAllTransitionsEnabled();
     saveInitialMarking(getMarkingObject());
-  }, [updateAllTransitionsEnabled, saveInitialMarking, getMarkingObject]);
+    setActiveTab(PANEL_TABS.SIMULATION);
+  }, [saveInitialMarking, getMarkingObject, setActiveTab]);
 
     const nodes = usePetriStore((s) => s.nodes);
 const edges = usePetriStore((s) => s.edges);
