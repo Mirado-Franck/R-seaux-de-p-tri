@@ -115,7 +115,21 @@
   font-style: italic;
 }
 
+.transition-node.demo-highlight {
+  border-color: #10b981;
+  background: #ecfdf5;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
+  animation: pulse-demo 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-demo {
+  0%, 100% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.6); }
+  50% { box-shadow: 0 0 24px rgba(16, 185, 129, 0.9); }
+}
+
 @keyframes pulse-enabled {
   0%, 100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.5); }
   50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.8); }
 }
+.transition-node.demo-paused { border-color: #ef4444; background: #fee2e2; animation: pulse-paused 1s ease infinite; }
+@keyframes pulse-paused { 0%,100% { box-shadow: 0 0 8px rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 16px rgba(239,68,68,0.7); } }

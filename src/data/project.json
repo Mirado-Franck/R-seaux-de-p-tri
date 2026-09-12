@@ -1,0 +1,10 @@
+{
+  "systemName": "Système de gestion de visite médicale chez un médecin",
+  "description": "Éditeur et simulation de réseaux de Petri pour la modélisation des flux de visite médicale",
+  "legend": [
+    { "id": "P1", "label": "Personne en train de se faire prendre tension", "type": "place" },
+    { "id": "P2", "label": "Personne en attente de consultation", "type": "place" },
+    { "id": "T1", "label": "Déclencher la prise de tension", "type": "transition" },
+    { "id": "T2", "label": "Passer au médecin", "type": "transition" }
+  ]
+}

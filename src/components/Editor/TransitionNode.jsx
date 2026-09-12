@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 import { Handle, Position } from 'reactflow';
 import usePetriStore from '../../stores/usePetriStore';
 import useSimulationStore from '../../stores/useSimulationStore';
+import useDemoStore from '../../stores/useDemoStore';
 import '../../styles/nodes.css';
 
 const handleStyle = {
@@ -16,6 +17,8 @@ const TransitionNode = ({ id, data, selected }) => {
   const fireTransition = usePetriStore((s) => s.fireTransition);
   const getMarkingObject = usePetriStore((s) => s.getMarkingObject);
   const recordFiring = useSimulationStore((s) => s.recordFiring);
+  const highlightId = useDemoStore((s) => s.highlightId);
+  const pausedTransitions = useDemoStore((s) => s.pausedTransitions);
 
   const handleDoubleClick = useCallback(
     (e) => {
@@ -33,7 +36,7 @@ const TransitionNode = ({ id, data, selected }) => {
 
   return (
     <div
-      className={`transition-node ${data.enabled ? 'enabled' : ''} ${selected ? 'selected' : ''}`}
+      className={`transition-node ${data.enabled ? 'enabled' : ''} ${selected ? 'selected' : ''} ${highlightId === id ? 'demo-highlight' : ''} ${pausedTransitions.has(id) ? 'demo-paused' : ''}`}
       onDoubleClick={handleDoubleClick}
       title={data.enabled ? 'Double-cliquez pour tirer cette transition' : 'Transition non franchissable'}
     >

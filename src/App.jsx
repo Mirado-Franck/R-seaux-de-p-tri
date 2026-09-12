@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ReactFlowProvider } from 'reactflow';
 import PetriNetEditor from './components/Editor/PetriNetEditor';
 import PropertiesPanel from './components/Editor/PropertiesPanel';
@@ -8,6 +8,8 @@ import PropertyChecker from './components/Properties/PropertyChecker';
 import NetValidator from './components/Properties/NetValidator';  // ← AJOUT
 import TransformationPanel from './components/Transformation/TransformationPanel';
 import useUIStore from './stores/useUIStore';
+import usePetriStore from './stores/usePetriStore';
+import projectMedical from './data/project_medical.json';
 import {
   Settings,
   Play,
@@ -32,11 +34,66 @@ function App() {
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const toggleRightPanel = useUIStore((s) => s.toggleRightPanel);
   const [activeTab, setActiveTab] = useState('properties');
+  const nodes = usePetriStore((s) => s.nodes);
+
+  useEffect(() => {
+    if (nodes.length === 0 && projectMedical.net) {
+      usePetriStore.getState().importNet(projectMedical.net);
+      // Initialiser p1 avec n
+      usePetriStore.getState().setMarking({ p1: projectMedical.n || 10 });
+    }
+  }, [nodes.length]);
+
 
   return (
     <ReactFlowProvider>
       <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div style={{ padding: '10px 16px', background: 'linear-gradient(90deg, #0c4a6e 0%, #0e7490 60%, #14b8a6 100%)', color: 'white', fontWeight: 600, fontSize: '15px', letterSpacing: '0.3px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+            🏥 {projectMedical.systemName}
+            <span style={{ float: 'right', fontWeight: 400, fontSize: '12px', opacity: 0.9 }}>{projectMedical.description}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', padding: '8px 16px', background: '#f0fdfa', borderBottom: '1px solid #ccfbf1', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#0c4a6e', whiteSpace: 'nowrap' }}>
+              👥 Nombre de personnes (n) :
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              defaultValue={projectMedical.n}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 0;
+                if (val > 0) usePetriStore.getState().setMarking({ p1: val });
+              }}
+              style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #99f6e4', width: '70px', fontWeight: 600, color: '#0c4a6e', background: '#fff' }}
+            />
+            <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap' }}>(chaque service traite 1 personne)</span>
+            <div style={{ flex: 1 }} />
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#0c4a6e', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>Légende :</span>
+            {projectMedical.legend?.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => alert(item.id + ' : ' + item.label)}
+                style={{
+                  background: item.type === 'place' ? '#e0f2f1' : '#ecfdf5',
+                  border: '1px solid ' + (item.type === 'place' ? '#99f6e4' : '#a7f3d0'),
+                  borderRadius: '20px',
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#0c4a6e',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                  transition: 'all 0.15s ease',
+                }}
+                title={item.label}
+              >
+                <span style={{ fontWeight: 800 }}>{item.id}</span> — {item.label}
+              </button>
+            ))}
+          </div>
           <PetriNetEditor />
         </div>
 
