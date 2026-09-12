@@ -176,7 +176,15 @@ const SimulationControls = () => {
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Services :</span>
         {['t1','t3','t5'].map(id => (
-          <button key={id} onClick={() => useDemoStore.getState().togglePaused(id)} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #ccc', background: useDemoStore.getState().pausedTransitions.has(id) ? '#fee2e2' : '#ecfdf5', color: useDemoStore.getState().pausedTransitions.has(id) ? '#991b1b' : '#0c4a6e', cursor: 'pointer', fontWeight: 600 }}>
+          <button key={id} onClick={() => {
+                  const isPaused = useDemoStore.getState().pausedTransitions.has(id);
+                  const resMap = {t1: {di:'res-poids-di',pa:'res-poids-pa'}, t3:{di:'res-tens-di',pa:'res-tens-pa'}, t5:{di:'res-med-di',pa:'res-med-pa'}};
+                  const r = resMap[id];
+                  if (r) {
+                    usePetriStore.getState().setMarking(isPaused ? { [r.di]: 1, [r.pa]: 0 } : { [r.di]: 0, [r.pa]: 1 });
+                  }
+                  useDemoStore.getState().togglePaused(id);
+                }} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #ccc', background: useDemoStore.getState().pausedTransitions.has(id) ? '#fee2e2' : '#ecfdf5', color: useDemoStore.getState().pausedTransitions.has(id) ? '#991b1b' : '#0c4a6e', cursor: 'pointer', fontWeight: 600 }}>
             {id.toUpperCase()} {useDemoStore.getState().pausedTransitions.has(id) ? '⏸ Pause' : '▶ Disponible'}
           </button>
         ))}
