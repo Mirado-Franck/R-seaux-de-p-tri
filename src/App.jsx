@@ -99,7 +99,7 @@ function App() {
               </button>
             ))}
           </div>
-          <PetriNetEditor />
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}><PetriNetEditor /></div>
         </div>
 
         <button
