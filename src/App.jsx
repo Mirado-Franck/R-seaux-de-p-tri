@@ -40,7 +40,7 @@ function App() {
   const sysName = projectMedical.systemName || 'Système de visite médical chez le médecin';
   const sysDesc = projectMedical.description || 'Parcours médical : prise de poids → tension → médecin → sortie';
   const legendData = legendData || [];
-  const defaultN = projectMedical.n || (netData && netData.nodes ? (netData.nodes.find((n: any) => n.id === 'place-attente')?.data?.tokens ?? 10) : 10);
+  const defaultN = projectMedical.n || (netData && netData.nodes ? (netData.nodes.find(n => n.id === 'place-attente')?.data?.tokens ?? 10) : 10);
 
   useEffect(() => {
     if (nodes.length === 0 && netData) {
