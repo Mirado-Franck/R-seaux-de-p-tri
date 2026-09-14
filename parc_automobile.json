@@ -4,25 +4,25 @@
       "id": "place-attente",
       "type": "place",
       "position": { "x": 100, "y": 100 },
-      "data": { "label": "P_Attente", "tokens": 10, "capacity": null }
+      "data": { "label": "P_Attente", "tokens": 3, "capacity": null }
     },
     {
-      "id": "place-poste-poids",
+      "id": "place-poste1",
       "type": "place",
       "position": { "x": 100, "y": 320 },
-      "data": { "label": "P_Poste_Poids", "tokens": 0, "capacity": null }
+      "data": { "label": "P_Poste1", "tokens": 0, "capacity": null }
     },
     {
-      "id": "place-poste-tension",
+      "id": "place-poste2",
       "type": "place",
       "position": { "x": 100, "y": 540 },
-      "data": { "label": "P_Poste_Tension", "tokens": 0, "capacity": null }
+      "data": { "label": "P_Poste2", "tokens": 0, "capacity": null }
     },
     {
-      "id": "place-poste-medecin",
+      "id": "place-poste3",
       "type": "place",
       "position": { "x": 100, "y": 760 },
-      "data": { "label": "P_Poste_Medecin", "tokens": 0, "capacity": null }
+      "data": { "label": "P_Poste3", "tokens": 0, "capacity": null }
     },
     {
       "id": "place-sortie",
@@ -31,210 +31,210 @@
       "data": { "label": "P_Sortie", "tokens": 0, "capacity": null }
     },
     {
-      "id": "place-poids-libre",
+      "id": "place-tech1-libre",
       "type": "place",
       "position": { "x": 400, "y": 200 },
-      "data": { "label": "Res_Poids_Disponible", "tokens": 1, "capacity": 1 }
+      "data": { "label": "T_Libre1", "tokens": 1, "capacity": 1 }
     },
     {
-      "id": "place-poids-pause",
+      "id": "place-tech1-pause",
       "type": "place",
       "position": { "x": 650, "y": 200 },
-      "data": { "label": "Res_Poids_Pause", "tokens": 0, "capacity": 1 }
+      "data": { "label": "T_Pause1", "tokens": 0, "capacity": 1 }
     },
     {
-      "id": "place-tension-libre",
+      "id": "place-tech2-libre",
       "type": "place",
       "position": { "x": 400, "y": 420 },
-      "data": { "label": "Res_Tension_Disponible", "tokens": 1, "capacity": 1 }
+      "data": { "label": "T_Libre2", "tokens": 1, "capacity": 1 }
     },
     {
-      "id": "place-tension-pause",
+      "id": "place-tech2-pause",
       "type": "place",
       "position": { "x": 650, "y": 420 },
-      "data": { "label": "Res_Tension_Pause", "tokens": 0, "capacity": 1 }
+      "data": { "label": "T_Pause2", "tokens": 0, "capacity": 1 }
     },
     {
-      "id": "place-medecin-libre",
+      "id": "place-tech3-libre",
       "type": "place",
       "position": { "x": 400, "y": 640 },
-      "data": { "label": "Res_Medecin_Disponible", "tokens": 1, "capacity": 1 }
+      "data": { "label": "T_Libre3", "tokens": 1, "capacity": 1 }
     },
     {
-      "id": "place-medecin-pause",
+      "id": "place-tech3-pause",
       "type": "place",
       "position": { "x": 650, "y": 640 },
-      "data": { "label": "Res_Medecin_Pause", "tokens": 0, "capacity": 1 }
+      "data": { "label": "T_Pause3", "tokens": 0, "capacity": 1 }
     },
     {
-      "id": "trans-entrer-poids",
+      "id": "trans-entrer1",
       "type": "transition",
       "position": { "x": 108, "y": 220 },
-      "data": { "label": "Debut_Prise_Poids", "enabled": false }
+      "data": { "label": "Entrer1", "enabled": false }
     },
     {
-      "id": "trans-passer-poids-tension",
+      "id": "trans-passer12",
       "type": "transition",
       "position": { "x": 108, "y": 440 },
-      "data": { "label": "Fin_Poids_Debut_Tension", "enabled": false }
+      "data": { "label": "Passer12", "enabled": false }
     },
     {
-      "id": "trans-passer-tension-medecin",
+      "id": "trans-passer23",
       "type": "transition",
       "position": { "x": 108, "y": 660 },
-      "data": { "label": "Fin_Tension_Debut_Consultation", "enabled": false }
+      "data": { "label": "Passer23", "enabled": false }
     },
     {
-      "id": "trans-sortir-medecin",
+      "id": "trans-sortir3",
       "type": "transition",
       "position": { "x": 108, "y": 880 },
-      "data": { "label": "Fin_Consultation_Sortie", "enabled": false }
+      "data": { "label": "Sortir3", "enabled": false }
     },
     {
-      "id": "trans-pause-poids",
+      "id": "trans-pause1",
       "type": "transition",
       "position": { "x": 528, "y": 208 },
-      "data": { "label": "Pause_Poids", "enabled": false }
+      "data": { "label": "Pause1", "enabled": false }
     },
     {
-      "id": "trans-reprise-poids",
+      "id": "trans-reprise1",
       "type": "transition",
       "position": { "x": 528, "y": 260 },
-      "data": { "label": "Reprise_Poids", "enabled": false }
+      "data": { "label": "Reprise1", "enabled": false }
     },
     {
-      "id": "trans-pause-tension",
+      "id": "trans-pause2",
       "type": "transition",
       "position": { "x": 528, "y": 428 },
-      "data": { "label": "Pause_Tension", "enabled": false }
+      "data": { "label": "Pause2", "enabled": false }
     },
     {
-      "id": "trans-reprise-tension",
+      "id": "trans-reprise2",
       "type": "transition",
       "position": { "x": 528, "y": 480 },
-      "data": { "label": "Reprise_Tension", "enabled": false }
+      "data": { "label": "Reprise2", "enabled": false }
     },
     {
-      "id": "trans-pause-medecin",
+      "id": "trans-pause3",
       "type": "transition",
       "position": { "x": 528, "y": 648 },
-      "data": { "label": "Pause_Medecin", "enabled": false }
+      "data": { "label": "Pause3", "enabled": false }
     },
     {
-      "id": "trans-reprise-medecin",
+      "id": "trans-reprise3",
       "type": "transition",
       "position": { "x": 528, "y": 700 },
-      "data": { "label": "Reprise_Medecin", "enabled": false }
+      "data": { "label": "Reprise3", "enabled": false }
     }
   ],
   "edges": [
     {
       "id": "e-a1",
       "source": "place-attente",
-      "target": "trans-entrer-poids",
+      "target": "trans-entrer1",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-t1-in",
-      "source": "place-poids-libre",
-      "target": "trans-entrer-poids",
+      "source": "place-tech1-libre",
+      "target": "trans-entrer1",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-e1-p1",
-      "source": "trans-entrer-poids",
-      "target": "place-poste-poids",
+      "source": "trans-entrer1",
+      "target": "place-poste1",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-p1-p12",
-      "source": "place-poste-poids",
-      "target": "trans-passer-poids-tension",
+      "source": "place-poste1",
+      "target": "trans-passer12",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-t2-in",
-      "source": "place-tension-libre",
-      "target": "trans-passer-poids-tension",
+      "source": "place-tech2-libre",
+      "target": "trans-passer12",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-p12-t1-back",
-      "source": "trans-passer-poids-tension",
-      "target": "place-poids-libre",
+      "source": "trans-passer12",
+      "target": "place-tech1-libre",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-p12-p2",
-      "source": "trans-passer-poids-tension",
-      "target": "place-poste-tension",
+      "source": "trans-passer12",
+      "target": "place-poste2",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-p2-p23",
-      "source": "place-poste-tension",
-      "target": "trans-passer-tension-medecin",
+      "source": "place-poste2",
+      "target": "trans-passer23",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-t3-in",
-      "source": "place-medecin-libre",
-      "target": "trans-passer-tension-medecin",
+      "source": "place-tech3-libre",
+      "target": "trans-passer23",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-p23-t2-back",
-      "source": "trans-passer-tension-medecin",
-      "target": "place-tension-libre",
+      "source": "trans-passer23",
+      "target": "place-tech2-libre",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-p23-p3",
-      "source": "trans-passer-tension-medecin",
-      "target": "place-poste-medecin",
+      "source": "trans-passer23",
+      "target": "place-poste3",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-p3-s",
-      "source": "place-poste-medecin",
-      "target": "trans-sortir-medecin",
+      "source": "place-poste3",
+      "target": "trans-sortir3",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-s-t3-back",
-      "source": "trans-sortir-medecin",
-      "target": "place-medecin-libre",
+      "source": "trans-sortir3",
+      "target": "place-tech3-libre",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-s-sortie",
-      "source": "trans-sortir-medecin",
+      "source": "trans-sortir3",
       "target": "place-sortie",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
@@ -242,96 +242,96 @@
     },
     {
       "id": "e-pause1-in",
-      "source": "place-poids-libre",
-      "target": "trans-pause-poids",
+      "source": "place-tech1-libre",
+      "target": "trans-pause1",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-pause1-out",
-      "source": "trans-pause-poids",
-      "target": "place-poids-pause",
+      "source": "trans-pause1",
+      "target": "place-tech1-pause",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-reprise1-in",
-      "source": "place-poids-pause",
-      "target": "trans-reprise-poids",
+      "source": "place-tech1-pause",
+      "target": "trans-reprise1",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-reprise1-out",
-      "source": "trans-reprise-poids",
-      "target": "place-poids-libre",
+      "source": "trans-reprise1",
+      "target": "place-tech1-libre",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-pause2-in",
-      "source": "place-tension-libre",
-      "target": "trans-pause-tension",
+      "source": "place-tech2-libre",
+      "target": "trans-pause2",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-pause2-out",
-      "source": "trans-pause-tension",
-      "target": "place-tension-pause",
+      "source": "trans-pause2",
+      "target": "place-tech2-pause",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-reprise2-in",
-      "source": "place-tension-pause",
-      "target": "trans-reprise-tension",
+      "source": "place-tech2-pause",
+      "target": "trans-reprise2",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-reprise2-out",
-      "source": "trans-reprise-tension",
-      "target": "place-tension-libre",
+      "source": "trans-reprise2",
+      "target": "place-tech2-libre",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-pause3-in",
-      "source": "place-medecin-libre",
-      "target": "trans-pause-medecin",
+      "source": "place-tech3-libre",
+      "target": "trans-pause3",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-pause3-out",
-      "source": "trans-pause-medecin",
-      "target": "place-medecin-pause",
+      "source": "trans-pause3",
+      "target": "place-tech3-pause",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-reprise3-in",
-      "source": "place-medecin-pause",
-      "target": "trans-reprise-medecin",
+      "source": "place-tech3-pause",
+      "target": "trans-reprise3",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
     },
     {
       "id": "e-reprise3-out",
-      "source": "trans-reprise-medecin",
-      "target": "place-medecin-libre",
+      "source": "trans-reprise3",
+      "target": "place-tech3-libre",
       "type": "arc",
       "data": { "weight": 1, "type": "arc" },
       "markerEnd": { "type": "arrowclosed", "color": "#1f2937", "width": 18, "height": 18 }
