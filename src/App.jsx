@@ -36,13 +36,18 @@ function App() {
   const [activeTab, setActiveTab] = useState('properties');
   const nodes = usePetriStore((s) => s.nodes);
 
+  const netData = projectMedical.net || (projectMedical.nodes ? { nodes: projectMedical.nodes, edges: projectMedical.edges } : null);
+  const sysName = projectMedical.systemName || 'Système de visite médical chez le médecin';
+  const sysDesc = projectMedical.description || 'Parcours médical : prise de poids → tension → médecin → sortie';
+  const legendData = legendData || [];
+  const defaultN = projectMedical.n || (netData && netData.nodes ? (netData.nodes.find((n: any) => n.id === 'place-attente')?.data?.tokens ?? 10) : 10);
+
   useEffect(() => {
-    if (nodes.length === 0 && projectMedical.net) {
-      usePetriStore.getState().importNet(projectMedical.net);
-      // Initialiser p1 avec n
-      usePetriStore.getState().setMarking({ p1: projectMedical.n || 10 });
+    if (nodes.length === 0 && netData) {
+      usePetriStore.getState().importNet(netData);
+      usePetriStore.getState().setMarking({ 'place-attente': defaultN });
     }
-  }, [nodes.length]);
+  }, [nodes.length, netData, defaultN]);
 
 
   return (
@@ -50,8 +55,8 @@ function App() {
       <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <div style={{ padding: '10px 16px', background: 'linear-gradient(90deg, #0c4a6e 0%, #0e7490 60%, #14b8a6 100%)', color: 'white', fontWeight: 600, fontSize: '15px', letterSpacing: '0.3px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-            🏥 {projectMedical.systemName}
-            <span style={{ float: 'right', fontWeight: 400, fontSize: '12px', opacity: 0.9 }}>{projectMedical.description}</span>
+            🏥 {sysName}
+            <span style={{ float: 'right', fontWeight: 400, fontSize: '12px', opacity: 0.9 }}>{sysDesc}</span>
           </div>
           <div style={{ display: 'flex', gap: '10px', padding: '8px 16px', background: '#f0fdfa', borderBottom: '1px solid #ccfbf1', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#0c4a6e', whiteSpace: 'nowrap' }}>
@@ -64,14 +69,14 @@ function App() {
               defaultValue={projectMedical.n}
               onChange={(e) => {
                 const val = parseInt(e.target.value) || 0;
-                if (val > 0) usePetriStore.getState().setMarking({ p1: val });
+                if (val > 0) usePetriStore.getState().setMarking({ 'place-attente': val });
               }}
               style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #99f6e4', width: '70px', fontWeight: 600, color: '#0c4a6e', background: '#fff' }}
             />
             <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap' }}>(chaque service traite 1 personne)</span>
             <div style={{ flex: 1 }} />
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#0c4a6e', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>Légende :</span>
-            {projectMedical.legend?.map((item) => (
+            {legendData?.map((item) => (
               <button
                 key={item.id}
                 onClick={() => alert(item.id + ' : ' + item.label)}

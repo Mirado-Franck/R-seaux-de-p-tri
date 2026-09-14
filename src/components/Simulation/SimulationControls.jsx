@@ -178,7 +178,7 @@ const SimulationControls = () => {
         {['t1','t3','t5'].map(id => (
           <button key={id} onClick={() => {
                   const isPaused = useDemoStore.getState().pausedTransitions.has(id);
-                  const resMap = {t1: {di:'res-poids-di',pa:'res-poids-pa'}, t3:{di:'res-tens-di',pa:'res-tens-pa'}, t5:{di:'res-med-di',pa:'res-med-pa'}};
+                  const resMap = {'trans-entrer-poids': {di:'place-poids-libre',pa:'place-poids-pause'}, 'trans-passer-poids-tension':{di:'place-tension-libre',pa:'place-tension-pause'}, 'trans-passer-tension-medecin':{di:'place-medecin-libre',pa:'place-medecin-pause'}};
                   const r = resMap[id];
                   if (r) {
                     usePetriStore.getState().setMarking(isPaused ? { [r.di]: 1, [r.pa]: 0 } : { [r.di]: 0, [r.pa]: 1 });
